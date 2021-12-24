@@ -293,6 +293,7 @@ dosyanın içeriği aşağıdaki gibidir;
 <p> Bu sefer Elasticsearch çıktısını pasif duruma getirip Logstash yapılandırılmasını aktifleştiriyoruz. Filebeat’den gelen loglar direk Elasticsearch’e gitmeyecek Logstash’e gönderilecektir. Bu işlem sonucunda filebeat hizmetini yeniden başlatıp çalıştırıyoruz.</p> 
 `systemctl restart filebeat`</br>
 `filebeat setup`</br>
+
 <p align="center"> 
 <img src="https://user-images.githubusercontent.com/82549640/147299912-8cddc768-9d81-425b-b21f-7913b14dac95.png"></br> Şekil 24 - filebeat.yml output yapılandırılması
 </p>
@@ -328,4 +329,195 @@ dosyanın içeriği aşağıdaki gibidir;
 <p align="center"> 
 <img src="https://user-images.githubusercontent.com/82549640/147300145-b9b6f932-ea2d-400d-8da8-3c1345ff9083.png"></br> Şekil 28 - Nginx log kayıtları
 </p>
+
+## 7. LOG DOSYALARINI İZLEME
+
+<p> Log dosyaları, Linux’un yöneticiler için depoladığı, sunucu, çekirdek, hizmetler ve üzerinde çalışan uygulamalar hakkındaki önemli olayları izlemesi için kaydedilen kayıtlardır. Bu yazıda, sunucu yöneticilerinin izlemesi gereken Linux Log dosyalarını gözden geçireceğiz.</p>
+<p> Log dosyaları, Linux yöneticilerinin önemli olayları izlemesini sağladığı bir dizi kayıttır. Çekirdek, hizmetler ve üzerinde çalışan uygulamalar dahil olmak üzere sunucu hakkında mesajlar içerirler. Linux, / var / log dizini altında bulunabilen merkezi bir Log dosyaları deposu sağlar.</p>
+<p> Bir Linux ortamında oluşturulan log dosyaları genellikle dört farklı kategoride sınıflandırılabilir:</p>
+1.	Application (Uygulama) Logları</br>
+2.	Event (Olay) Logları</br>
+3.	Service (Servis) Logları</br>
+4.	System (Sistem) Logları</br>
+
+### 7.1 Neden Log Dosyalarını İzliyoruz?
+
+<p> Log yönetimi, bir sistem yöneticisinin en önemli sorumluluklarından biridir. Sistem üzerinde gerçekleşen olaylardan haberdar olmak, sistemin durumunu öğrenmek, alınan hata mesajlarının sorunun sebebinin ne olduğunu bilmek ve bunlara göre çözüm bulmak sistem yöneticisinin görevidir. Tabi ki günümüzde artık makine öğrenmesi sayesinde bu log analizi işlemleri daha hızlı ve daha aktif şekilde yapılmaktadır. Bu yüzden de bu log kayıtları hayati önem taşımaktadır.</p>
+<p>Kısacası, Log dosyaları, ortaya çıkmadan önce ortaya çıkacak sorunları önceden tahmin edebilmenizi sağlar.</p>
+
+### 7.2 Çoklu Giriş ve Çıkış Ayarlı Logstash
+
+<p>Logstash, bir giriş ve çıkış verileri üzerinden gönderim yapmanın yanışına bunu ihtiyacımız olanı kadar esnetebilmemiz için bize imkan sağlamaktadır. Yani her bir dosya için tek tek .conf dosyası oluşturmak yerine bu işlemi bir dosya içerisinde Şekil – 29 da ki yapıyı kullanarak halledebiliyoruz. Her input girişi için bir etiket(tags) değeri atıyoruz. Bu etiket değeri üzerinden koşul işlemleri ile yönlendirmeler yapıyoruz. Bu aşamadan sonra biz bu yapı üzerinden gideceğiz.</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147311997-d7789fc8-8913-4b9f-afec-f62ebce2e764.png"></br> Şekil 29 - Multiple inputs and Outputs Logstash
+</p>
+
+### 7.3 İzlenmesi Gereken Bazı Önemli Log Dosyaları
+## 7.3.1 SysLog 
+
+<p> Syslog, Linux işletim sistemimiz üzerinde neler olup bittiğini öğrenmek ve geriye yönelik sisteme giriş, uyarı, durum, hata ve rapor gibi kayıtların tutulduğu sistemlerdir. Bu sayede sistem yöneticileri için büyük önem taşır. Syslog sistem hatalarının, saldırıları veya işletim sisteminde oluşan problemler gibi durumları kayıt altında tutar. Bu gibi durumları tespit edebilmemiz için SysLog kayıtlarını geçmişe yönelik olarak incelememiz yeterli olacaktır. Bu kayıtlar sayesinde sistem yöneticileri sistem üzerindeki anormallikleri tespit ederek sistemin verimli veya güvenli çalışmasını sağlar, olası hata durumlarında çözüm üretebilirler.</p>
+<p>Syslog sistemlerinin bir diğer özelliği de başka bir sisteme bu kayıtların aktarılabilmesidir. Bu sayede uzaktan log kayıtlarınıza erişebilir ve yönetim sağlayabilirsiniz. Klasik Linux sistemlerde bu kayıtlar /etc/syslog.conf şeklinde ayarlanabilir. Ancak modern Linux sistemlerde SysLog’a yeni özellikler eklenerek rsyslogd servisi geliştirilmiştir.</p>
+`nano /etc/rsyslogd.conf`
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147312121-75e1692e-a6e6-4f44-a357-5bb89163fd08.png"></br> Şekil 30 - rsyslog.conf
+</p>
+<p> Klasik Linux sistemlerde log kayıtları /var/log dizini altında tutulmaktadır. Bu dizin SysLog aracılığı ile ortak bir şekilde log kayıtların tutulduğu önemli bir dizindir. Biz bu örnekte Syslog.conf dosyasından yönlendirme ayarlarına dokunmadan filebeat ile bu dizindeki logları alacağız.</p>
+<p>Örnek: Sistem günlüğüne bir mesaj yazalım ardından yazdığımız mesajı SysLog dosyasından görelim. Bu işi yapan logger programı hızlı bir şekilde basit bir komutla sistem günlüğüne mesaj yazmanızı sağlar. Aşağıdaki komutu kullanarak sistem günlüğüne “Mühendislik Tasarımı” yazalım, hemen ardından tail komutunu kullanarak yazdığımız mesajı SysLog dosyasında görelim.</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147312175-023d560a-313b-48d8-8188-764c9adb49fd.png"></br> Şekil 31 - Logger SysLog Örneği-1
+</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147312212-6464c59b-cace-4cc2-a3d5-a83752866ad0.png"></br> Şekil 32 - Logger SysLog Örneği-2
+</p>
+
+#### SysLog Dosyasını İzleme Alalım;
+
+1)	Filebeat yapılandırma dosyasında tüm SysLog dosyalarını okuması için tanımlamasını yapıyoruz.</br>
+`sudo nano /etc/filebeat/filebeat.yml`
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147312621-3a474ad6-ccdc-4232-9bb5-72e98dd588d9.png"></br> Şekil 33 - filebeat.yml Yapılandırma Dosyası
+</p>
+
+2)	Logstash conf.d dizinine giderek daha önce oluşturduğumuz tek giriş ve çıkış yönlendirmeli yapılandırma dosyasını Şekil 33 de görmekteyiz.</br>
+`cat /etc/logstash/conf.d/nginx.conf`
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147312719-b574874d-c730-4bf8-9051-913a13061dd6.png"></br> Şekil 34 - Logstash Yapılandırma Dosyası
+</p>
+
+3)	Bu adımda logstash/conf.d dizininde oluşturduğumuz yapılandırma dosyasını Şekil 29 da ki yapıya uyarlayarak daha önceden oluşturduğumuz nginx erişim yönlendirmesinin üzerine SysLog dosyasını ekleyeceğiz.</br>
+`sudo nano /etc/logstash/conf.d/nginx.conf` dosyasını açarak ilk olarak input kısmını ekliyoruz.
+<p> Burada nginx ve SysLog girişlerine bir etiket(tags) belirliyoruz. Bu etiket üzerinden filter ve output adımlarında koşullu işlemlere dahil edeceğiz.</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147313836-c0cda3da-d1f4-4ce0-bde7-e7c27fdcf08b.png"></br> Şekil 35 - Yapılandırma Dosyası İnput Alanı
+</p>
+•	Oluşturduğumuz etiketler üzerinden burada input kısmındaki log dosyalarını koşullara dahil ettik. Belirlediğimiz etiket değerine karşılık gelen Grok kodlarını yazarak hangi yönlendirme trafiğini düzenlemiş oluyoruz.</br>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147313870-a5dde5a5-b982-44bf-a314-b73dfe487836.png"></br> Şekil 36 - Yapılandırma Dosyası Filter Alanı
+</p>
+
+•	Output alanında ise etiket değerlerine göre elasticsearch de index oluşturma işlemini gerçekleştiriyoruz.</br>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147313918-e436f36b-e853-466e-8d45-3697cb2c55e4.png"></br> Şekil 37 - Yapılandırma Dosyası Output Alanı
+</p>
+
+4)	Logstash ve filebeat hizmetlerini yeniden başlatıyoruz.</br>
+`systemctl restart filebeat` </br>
+`systemctl restart logstash` </br>
+5)	Son olarak kibana günlük panosu da syslog-* Indeks modelimizi tanımladık.  Discover ekranına geldiğimizde SysLog üzerinden okunan logları görebiliyoruz. “Logger” komutu ile oluşturduğumuz “Mühendislik Tasarımı” bilgisini de görebiliyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314092-237787af-19a2-4d98-a7d9-f648e44b9b6e.png"></br> Şekil 38 - Syslog Detayı
+</p>
+
+### 7.3.2 Messages.log
+
+<p> Bu log dosyasında genel sistem etkinlik logları tutulur. Bilgi amaçlı ve kritik olmayan sistem mesajlarını saklamak için kullanılır. Debian tabanlı Linux dağıtımlarında “/var/log/syslog” dizini ile benzerlik gösterir. Bir sorun olup olmadığının kontrolü için bakılması gereken ilk log dosyası burası olmalıdır. Bu log dosyası sayesinde aşağıdaki şeyleri öğrenebiliriz.</p>
+
+1.	Çekirdek dışı önyükleme hataları</br>
+2.	Uygulamalar ile ilgili servis hataları
+
+<p>Bu örneklerin üzerinden gittiğimiz Linux dağıtımı Ubuntu da /var/log/messages log dosyasının tuttuğu loglar SysLog kayıtlarında bulunmaktadır. Bu nedenle bu logları biz bir önceki Syslog başlığı altında izlemeye almış olduk.</p>
+
+### 7.3.3 Auth.log 
+
+<p> Kimlik doğrulama işlemleri ile ilgili tüm olaylar buraya kaydedilir. Debian ve Ubuntu dağıtımlarında bu log dosyasını görebilirsiniz. Aslında önemli bir log dosyasıdır. Güvenlik açıkları ile ilgili tespit yapmaya çalışıyorsanız buraya bakmanız gerekir. Sisteme kim giriş yapmış, kim kaç kere yanlış şifre girmiş veya kaba kuvvet saldırı deneyen birini buradaki log kayıtları ile tespit edebilirsiniz. Buradaki kayıtları ile aşağıdaki olayları tespit edebilirsiniz:</p>
+1.	Sisteme giriş yapan kişileri</br>
+2.	Yanlış şifre deneyen kişileri</br>
+3.	Başarılı veya başarısız oturum açan kişileri</br>
+4.	Kaba kuvvet saldırısı deneyen kişileri</br>
+
+ #### Auth.log Dosyasını İzleme Alalım
+
+1)	Filebeat yapılandırma dosyasında tüm auth.log dosyalarını okuması için tanımlamasını yapıyoruz.</br>
+`sudo nano /etc/filebeat/filebeat.yml`
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314225-0747e588-40cc-403d-bda3-d78b6435fcb7.png"></br> Şekil 39 - filebeat.yml
+</p>
+
+2)	logstash/conf.d dizininde ki yapılandırma dosyamıza auth.log dosyalarını input  alanında tanımlıyoruz. Elasticsearch’e gerekli index’i oluşturması için yönlendirme tanımlamasını ise output kısmında gerçekleştiriyoruz.</br>
+
+`sudo nano /etc/logstash/conf.d/nginx.conf`
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314300-c892c8a9-b53e-4022-b822-6d28c814045a.png"></br> Şekil 40 - logstash/conf.d/nginx.conf -> input
+</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314328-42e74bfe-e0ff-4915-af2b-a234757e86b7.png"></br> Şekil 41 - logstash/conf.d/nginx.conf -> output
+</p>
+
+3)	Burada önceki yapılandırma dosyalarındaki yaptığımız değişikliklerden bir fark var. O da auth.log dosyası için bir filter yapılandırması tanımlamadık ve ona uygun Grok şablonu kullanmadık. Bu şekilde de logstash yapılandırılması mevcuttur. Fakat okunabilirliği artırmak için, ihtiyaca göre değişiklik gösterdiği için tercih size kalmıştır.
+4)	Kibana üzerinden “Stack Management-> Index Pattern” üzerinden auth.log dosyaları için modelimizi oluşturuyoruz. Discover sekmesinden ise bu logları detaylı bir şekilde görebilirsiniz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314462-f9168f13-9bf7-4ec9-b604-113b28031444.png"></br> Şekil 42 - Discover auth.log detay
+</p>
+
+<p> NOT: Eğer güncel logları görmekte problem yaşıyorsanız Şekil 42’de ki saat ayarlarını güncelleyiniz.</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314549-a0809373-d4c3-428b-b34e-98137647e575.png"></br> Şekil 43 - Discover Zaman Bilgisi
+</p>
+
+### 7.3.4 Secure.log
+<p> RedHat ve CentOS tabanlı sistemler /var/log/auth.log yerine bu log dosyasını kullanır. Temel olarak ise authentication sistemlerinin kullanımını izlemek için kullanılır.</p>
+<p> Kimlik doğrulama hataları dahil, güvenlikle ilgili tüm mesajları saklar.</p>
+Ayrıca sudo girişlerini, SSH girişlerini ve sistem güvenlik hizmetleri arka planında oturum açan diğer hataları izler.
+<p> Bur örneğimizde Ubuntu üzerinde auth.log dosyasını bir önceki adımda izlemeye almıştık.</p>
+
+### 7.3.5 Apt / Yum Logları
+
+<p> Sisteme yeni bir paket yüklendiğinde bu işlemin bilgileri buraya kaydedilir. Linux dağıtımlarına göre paket türleri değişmektedir. Biz Ubuntu üzerinden ilerlediğimiz için /var/log/apt dizini altındaki history.log ve term.log dosyasını izlemeye alacağız. Farklı bir dağıtım için /var/log/ dizinin altında uygun paketin log dosyasını izlemelisiniz.</p>
+Bu log dosyası sayesinde şunları öğrenebiliriz:</br>
+1.	Bir paketin doğru kurulup kurulmadığını</br>
+2.	Yazılım yüklemeleriyle ilgili sorunları</br>
+3.	Yakın zamanda kurulmuş paketleri bulmak</br>
+
+1)	Filebeat ile /var/log/apt dizinin altındaki log dosyalarını okumasını söylüyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314681-d93f0442-67f0-4dd8-bdcc-dfc37bbd7d57.png"></br> Şekil 44 - filebeat.yml
+</p>
+
+2)	Logstash yapılandırma dosyasında giriş ve çıkış yönlendirme ayarlarını yapıyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314703-e79771e8-f8fe-4bf7-b878-050f2585aa01.png"></br> Şekil 45 - logstash/conf.d/nginx.conf -> input
+</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314741-3c41298a-e250-43a5-a388-c1c0ed40318f.png"></br> Şekil 46 - logstash/conf.d/nginx.conf -> output
+</p>
+
+3)	Logstash ve filebeat hizmetlerini yeniden başlatıyoruz.</br>
+`systemctl restart filebeat` </br>
+`systemctl restart logstash` </br>
+
+4)	Kibana üzerinden index modeli oluşturarak Discover alanında apt Loglarını görebiliyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147314803-3da297a3-b632-4a8d-b9cc-08d415ca0141.png"></br> Şekil 47 - Apt Log Kayıtları
+</p>
+
+<p> NOT: Kalan diğer log dosyalarını bu şekilde elasticsearch havuzunda topluyoruz. İhtiyacınıza bağlı olarak farklı dosyaları da bu şekilde izleyebilirsiniz. Dmesg.log, kern.log, Faillog dosyalarını bu şekilde izlemeye alabiliriz.</p>
+
+### 7.3.6 Dmesg Logları
+
+Linux çekirdeği tarafından kaydedilen bilgileri bu log dosyası depolar.</br>
+Bu log dosyası sayesinde şunları öğrenebiliriz:</br>
+1.	Çekirdek ile ilgili hataları ve uyarıları görmek için.</br>
+2.	Çekirdeğin sorunlarını gidermek için.</br>
+3.	Ayrıca donanım ve bağlantı sorunlarında hata ayıklamak için</br>
+
+
+### 7.3.7 Kern.log
+
+<p> Donanım ve sürücüler ile ilgili bilgiler buraya kaydedilir. Çekirdek, önyükleme işlemi sırasında sunucuyla ilişkili fiziksel donanım aygıtlarını algıladığından, aygıt durumunu, donanım hatalarını ve diğer genel mesajları yakalar. Bir donanım düzgün çalışmıyorsa veya algılanmıyorsa, sorunu bu log dosyasında arayabilirsiniz.</p>
+
+### 7.3.8 Faillog
+<p> Bu dosya başarısız giriş denemeleri hakkında bilgi içerir. Username/Password Hacking ve Brute-Force Attack içeren herhangi bir güvenlik ihlali girişimini bulmak için yararlı bir log dosyası olabilir.</p>
+
+## 8. PACKETBEAT İLE AĞ TRAFİĞİNİ DİNLEME
+
+<p> Packetbeat, Elasticsearch tarafından geliştirilen ve ağ trafiği yakalama için libpcap kitaplığını kullanan bir ağ izleme aracıdır. Bu aracı kullanarak http, TLS veya DNS'yi diğer birçok ağ protokolünü izleyebiliriz. Ancak, aracın güvenliğe değil, uygulama izlemeye odaklandığını belirtmek gerekir. Bu, güvenlik açısından yararlı olmayacağı anlamına gelmez, ancak birkaç sınırlamanın farkında olmamız gerekir.</p>
+
+1)	`cd /etc/packetbeat/packetbeat.yml` yapılandırma dosyasına giderek aşağıdaki ayarlamaları yapıyoruz.</br>
+
+•	Cihaz arayüzünü “herhangi biri” olarak ayarlıyoruz.
+ <p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147315044-6dfca46f-a1e6-45b3-91b3-e32b1faec55e.png"></br> Şekil 48 - packetbeat.yml -1
+</p>
+
+
 
