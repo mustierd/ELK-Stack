@@ -1,3 +1,62 @@
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147292359-46690a5b-7f0f-4095-a7d0-10bda82b7af7.png">
+</p>
+
+<p align="center"> 
+SELÇUK ÜNİVERSİTESİ</br>
+TEKNOLOJİ FAKÜLTESİ</br>
+BİLGİSAYAR MÜHENDİSLİĞİ BÖLÜMÜ</br>
+MÜHENDİSLİK TASARIMI PROJESİ</br>
+</p>
+<p align="center"> 
+LİNUX İŞLETİM SİSTEMİNDE </br>
+ELK STACK İLE LOG İZLEME</br></br>
+Mustafa ERDOĞAN</br>
+21/11/2021
+</p>
+
+## İÇİNDEKİLER
+
+### 1. GİRİŞ	</br>
+### 2. LOG KAVRAMI	</br>
+2.1 Log Nedir?	</br>
+2.2 Log Toplama	</br>
+2.3 Log Yönetimi ve Analizi	</br>
+### 3. SIEM (Security Information and Event Management)	</br>
+3.1 SIEM’ in Uygulama Adımları	</br>
+3.2 SIEM’ in Önemi	</br>
+### 4. ELK STACK NEDİR?	</br>
+4.1 Elasticsearch	</br>
+4.1.1 Temel Elasticsearch Kavramları	</br>
+4.2 Logstash	</br>
+4.2.1 Logstash Nasıl Çalışır?	</br>
+4.3 Kibana	</br>
+4.4 Beats	</br>
+### 5. ELK STACK KURULUMU	</br>
+5.1 Elasticsearch Kurulumu	</br>
+5.2 Logstash Kurulumu	</br>
+5.3 Kibana Kurulumu	</br>
+5.4 Filebeat Kurulumu	</br>
+5.5 Kibana Günlük Panosu Oluşturma	</br>
+### 6. NGİNX İLE KORUMA ALTINA ALMA	</br>
+6.1 Nginx Nedir?	</br>
+6.2 Nginx Kurulumu ve Yapılandırılması	</br>
+6.3 Nginx Loglarını İzlemeye Alma	</br>
+### 7. LOG DOSYALARINI İZLEME	</br>
+7.1 Neden Log Dosyalarını İzliyoruz?	</br>
+7.2 Çoklu Giriş ve Çıkış Ayarlı Logstash	</br>
+7.3 İzlenmesi Gereken Bazı Önemli Log Dosyaları	</br>
+7.3.1 Syslog	</br>
+7.3.2 Messages.log	</br>
+7.3.3 Auth.log	</br>
+7.3.4 Secure Log	</br>
+7.3.5 Apt Logları	</br>
+7.3.6 Dmesg Logları	</br>
+7.3.7 Kern.log	</br>
+7.3.8 Faillog	</br>
+### 8. PACKETBEAT İLE AĞ TRAFİĞİNİ	</br>
+### 9. SURİCATE İLE AĞ TRAFİĞİNİ	</br>
+
 ## 1. GİRİŞ 
 
 <p> Bilişim teknolojileri sistemlerinden çeşitli sebeplerle log toplama ve arama ihtiyacımız doğar. Örneğin bir alışveriş sitesinde kullanıcı davranışlarını loglamak (müşteriler hangi tarayıcılarla, hangi ülkelerden geliyorlar, hangi ürünleri geziyorlar vb.) bu amaçlardan birisi olabileceği gibi, Windows ve Linux hibrit bir ortamdaki gibi sistemlerden de güvenlik amaçlı log toplamak isteyebiliriz.</p>
@@ -518,6 +577,53 @@ Bu log dosyası sayesinde şunları öğrenebiliriz:</br>
  <p align="center"> 
 <img src="https://user-images.githubusercontent.com/82549640/147315044-6dfca46f-a1e6-45b3-91b3-e32b1faec55e.png"></br> Şekil 48 - packetbeat.yml -1
 </p>
+•	Dinlenecek protokolleri belirliyoruz.
+ <p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371544-8478754a-0ba5-4d72-9813-cd378b9bb277.png"></br> Şekil 49 - packetbeat.yml -2
+</p>
+•	Dashboard özelliğini aktif ediyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371553-31b88e96-90f7-45ff-b8dd-1538b9cf8a0b.png"></br> Şekil 50 - packetbeat.yml -3
+</p>
+•	Dinlenen paketlerin çıkış yönlendirmesini yapıyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371585-4eed460e-f886-46ce-a944-20dad94e63d9.png"></br> Şekil 51 - packetbeat.yml -4
+</p>
+•	Kibana panolarını kullanmak için gerekli yönlendirmeyi yapıyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371598-0c8eb646-a501-40a3-ade5-9a0be3917d0a.png"></br> Şekil 52 - packetbeat.yml -5
+</p>
+•	Son olarak packetbeat servisini yeniden başlatıyoruz.</br>
+
+`systemctl restart packetbeat`</br>
+2)	Discover alanına baktığımızda Network loğlarının düştüğünü görmüş oluyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371618-381879e7-a22f-46ea-b482-a1a931c0ca61.png"></br> Şekil 53 - Packetbeat log kayıtları
+</p>
+3)	Packetbeat ile networkü dinlememizin sonucunda ulaştığımız bilgileri bir Dashboard oluşturarak istatistiksel olarak göreceğiz.</br>
+•	Dashboard alanına giderek “Overview ECS” seçtik den sonra “Create Dashboard” ile oluşturuyoruz.
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371632-a402a13a-9828-4c96-aa9f-ce80cf00da0e.png"></br> Şekil 54 - Packetbeat Dashboard
+</p>
+4)	Bu panelde, networkü dinlememiz sonucunda ulaştığımız bilgiler ile aşağıdaki sonuçlara bir görsel düzen içerisinde ayrıntılı bir şekilde ulaşabiliyoruz;</br>
+•	DNS işlemleri</br>
+•	HTTP işlemleri</br>
+•	TLS oturumları</br>
+•	İşlem türleri</br>
+•	Yanıt sürelerinin yüzdeleri</br>
+•	Zaman içinde hata sayısı  </br>
+•	Networkü oluşturan cihazlar</br>
+
+<p> gibi bir çok bilgilere istatistiksel bir şekilde ayrıntılı olarak ulaşabiliriz. Bu kısım detay ve geniş kapsamlı olabileceği için üzerinde fazladan zaman harcayarak pekiştirmek daha doğru olacaktır.</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371664-0c2bc534-8ab2-47e5-86a1-5872af4d29dd.png"></br> Şekil 55 - Overview ECS
+</p>
+<p align="center"> 
+<img src="https://user-images.githubusercontent.com/82549640/147371702-7da6cb08-5b59-4990-bcf7-84d5f5d024a1.png"></br> Şekil 56 - Top Hosts Creating Traffic
+</p>
 
 
+## 9. SURİCATE İLE AĞ TRAFİĞİNİ DİNLEME
+
+<p> Suricata, Packetbeat’in aksine hem algılama hem de koruma özellikleri sunar ve ELK yığınıyla entegre edilebilir. Packetbeat'in aksine, Suricata ağ trafiğini izler ve önceden tanımlanmış güvenlik kurallarından bazılarıyla eşleşmeye çalışır. Bu trafik belirli bir güvenlik kuralıyla eşleşiyorsa, Suricata bir uyarı oluşturabilir veya bu trafiği engelleyebilir. Ayrıca, kötü amaçlı etkinlikleri algılayan birçok açık kural vardır, ancak kendi kurallarımızı da oluşturabiliriz.</p>
 
